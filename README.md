@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/riatelab/MTA.svg?branch=master)](https://travis-ci.org/riatelab/MTA)
+
 # Multiscalar Territorial Analysis
 
 *Multiscalar territorial analysis based on various contexts.*   
@@ -10,8 +12,13 @@
 - mst: multiscalar typology based on the three deviations.  
 - mas: multiscalar absolute synthesis, total amount of redistributions based on the three deviations.  
 
-
 ## Installation
+
+* Stable version
+```{r}
+install.packages("MTA")
+```
+
 * Development version on GitHub
 ```{r}
 require(devtools)
