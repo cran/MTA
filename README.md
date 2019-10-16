@@ -8,9 +8,10 @@
 ## Main functions :
 - gdev: general deviation between regional ratios and a ratio of reference.  
 - tdev: territorial deviation between regional ratios and ratios of an aggregated level.  
-- sdev: spatial deviation between regional ratios and ratios of neigborhing regions.  
+- sdev: spatial deviation between regional ratios and ratios of neighborhing regions.  
 - mst: multiscalar typology based on the three deviations.  
 - mas: multiscalar absolute synthesis, total amount of redistributions based on the three deviations.  
+- mapmst : map multiscalar typology synthesis according to the three deviations. 
 
 ## Installation
 
@@ -21,7 +22,7 @@ install.packages("MTA")
 
 * Development version on GitHub
 ```{r}
-require(devtools)
+require(remotes)
 install_github("riatelab/MTA")
 ```
 
