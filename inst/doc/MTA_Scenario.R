@@ -1,8 +1,7 @@
-## ----input, fig.width=7, fig.height=5, warning = FALSE, cache = FALSE----
+## ----input, warning = FALSE, cache = FALSE------------------------------------
 # load packages
 library(MTA)
 library(cartography)
-library(sp)
 library(ineq)
 library(reshape2)
 library(sf)
@@ -40,7 +39,7 @@ epts <- c("Paris",
           "Association des Communes\nde l'Est Parisien")
 
 # colors
-cols <- c("#bc60b7", carto.pal("blue.pal", 8)[c(2, 3, 4, 5)], 
+colsEPT <- c("#bc60b7", carto.pal("blue.pal", 8)[c(2, 3, 4, 5)], 
           carto.pal("green.pal", 8)[c(2, 3, 4, 5)], 
           carto.pal("red.pal", 8)[c(3, 4, 5)])
 
@@ -48,19 +47,18 @@ cols <- c("#bc60b7", carto.pal("blue.pal", 8)[c(2, 3, 4, 5)],
 typoLayer(x = com,
           var="LIBEPT2", legend.values.order = epts,
           legend.pos = "left", 
-          col = cols,
+          col = colsEPT,
           lwd = 0.2,
           border = "white",
           legend.title.txt = "EPT of belonging")
 
-plot(st_geometry(ept), col = NA, border = "black", add = TRUE)
+plot(ept$geometry, col = NA, border = "black", add = TRUE)
 
 # layout 
 layoutLayer(title = "Territorial Zoning of the MGP",
             sources = "GEOFLA® 2015 v2.1, Apur, impots.gouv.fr",
-            north = TRUE, scale = 5, tabtitle = TRUE, frame = FALSE,
-            theme = "red.pal", author = "Ronan Ysebaert, RIATE, 2019")
-
+            north = TRUE, scale = 5, col = "white", coltitle = "black",
+            author = "Ronan Ysebaert, RIATE, 2021")
 
 ## ----INCDeINC_plot, fig.width=7, fig.height=5, warning = FALSE, cache = FALSE----
 # layout
@@ -68,7 +66,7 @@ par(mfrow = c(1, 2), mar = c(0, 0, 1.2, 0))
 
 # numerator map
 com$INCM <- com$INC / 1000000
-plot(st_geometry(com),  col = "peachpuff",  border = NA)
+plot(com$geometry,  col = "peachpuff",  border = NA)
 plot(st_geometry(ept),  col = NA,  border = "black", add = TRUE)
 
 propSymbolsLayer(x = com,
@@ -82,8 +80,8 @@ propSymbolsLayer(x = com,
 # layout
 layoutLayer(title = "Numerator - Amount of income tax reference",
             sources = "GEOFLA® 2015 v2.1, Apur, impots.gouv.fr",
-            north = FALSE, scale = FALSE, tabtitle = TRUE, frame = F, theme = "red.pal",
-            author = "Ronan Ysebaert, RIATE, 2019")
+            north = FALSE, scale = FALSE, col = "white", coltitle = "black",
+            author = "Ronan Ysebaert, RIATE, 2021")
 
 
 # denominator map
@@ -101,12 +99,11 @@ propSymbolsLayer(x = com,
 
 # layout
 layoutLayer(title = "Denominator - Tax households",
-            sources = "",
-            north = TRUE, scale = 5, tabtitle = TRUE, frame = FALSE,
-            theme = "red.pal", author = "")
+            sources = "", north = TRUE, scale = 5, 
+            col = "white", coltitle = "black")
 
 ## ----ratio_plot, fig.width=7, fig.height=5, warning = FALSE, cache = FALSE----
-par(mar = c(0, 0, 1.2, 0))
+par(mar = c(0, 0, 1.2, 0), mfrow = c(1,1))
 
 # ratio
 com$ratio <- com$INC / com$TH
@@ -124,13 +121,19 @@ choroLayer(x = com,
            legend.values.rnd = 0)
 
 # EPT borders
-plot(st_geometry(ept), border = "black",add = TRUE)
+plot(ept$geometry, border = "black",add = TRUE)
+
+# Label min and max
+labelLayer(x = com[which.min(com$ratio),], txt = "LIBCOM", col= "black", cex = 0.6, font = 2,
+           halo = TRUE, bg = "white", r = 0.05)
+labelLayer(x = com[which.max(com$ratio),], txt = "LIBCOM", col= "black", cex = 0.6, font = 2,
+           halo = TRUE, bg = "white", r = 0.05)
 
 # layout 
 layoutLayer(title = "Ratio - Income per tax households, 2013",
             sources = "GEOFLA® 2015 v2.1, Apur, impots.gouv.fr",
-            north = TRUE, scale = 5, tabtitle = TRUE, frame = FALSE, theme = "red.pal",
-            author = "Ronan Ysebaert, RIATE, 2019")
+            north = TRUE, scale = 5, col = "white", coltitle = "black",
+            author = "Ronan Ysebaert, RIATE, 2021")
 
 ## ----gdevrel_plot, fig.width=7, fig.height=5, warning = FALSE, cache = FALSE----
 # general relative deviation
@@ -139,82 +142,75 @@ com$gdevrel <- gdev(x = com,
                     var2 = "TH", 
                     type = "rel")
 
-# general absolute deviation 
-com$gdevabs <- gdev(x = com, 
-                    var1 = "INC", 
-                    var2 = "TH", 
-                    type = "abs")
-
-# general deviation in million Euros
-com$gdevabsmil <- com$gdevabs / 1000000
-
 # margins
 par(mar = c(0, 0, 1.2, 0))
 
-# Plot territories
-plot(st_geometry(com), col = "grey70", border = "#EDEDED", lwd = 0.25)
-plot(st_geometry(ept), border = "#1A1A19", lwd = 1, add = TRUE)
+# Global colors for deviation
+cols <- carto.pal(pal1 = "blue.pal", n1 = 3,  pal2 = "wine.pal", n2 = 3)
 
-# Global deviation (relative and absolute) cartography
-propSymbolsChoroLayer(x = com,
-                      var = "gdevabsmil", var2 = "gdevrel",
-                      add = TRUE,
-                      inches = 0.3,
-                      col = carto.pal(pal1 = "blue.pal", n1 = 3,
-                                      pal2 = "wine.pal", n2 = 3),
-                      breaks = c(min(com$gdevrel, na.rm = TRUE),
-                                 75, 90, 100, 111, 133,
-                                 max(com$gdevrel, na.rm = TRUE)),
-                      border = "#f0f0f0",
-                      lwd = 0.25,
-                      legend.var.pos = "left", legend.var2.pos = "topleft",
-                      legend.var.title.txt = "Redistribution (Million euros)",
-                      legend.var2.title.txt = "Deviation to the global context (100 = Metropole du Grand Paris average)",
-                      legend.var.style = "e",
-                      legend.var.values.rnd = 0,
-                      legend.var2.values.rnd = 0)
+# Global deviation mapping
+choroLayer(x = com,
+           var = "gdevrel",
+           col = cols,
+           breaks = c(min(com$gdevrel, na.rm = TRUE),
+                      67, 91, 100, 125, 150,
+                      max(com$gdevrel, na.rm = TRUE)),
+           border = "#f0f0f0",
+           lwd = 0.25,
+           legend.pos = "topleft",
+           legend.title.txt = "Deviation to the global context (100 = Metropole du Grand Paris average)",
+                      legend.values.rnd = 0)
+
+# Plot EPT layer
+plot(ept$geometry, border = "#1A1A19", lwd = 1, add = TRUE)
 
 # layout 
 layoutLayer(title = "Global deviation - Tax income per households",
             sources = "GEOFLA® 2015 v2.1, Apur, impots.gouv.fr",
-            north = TRUE, scale = 5, tabtitle = TRUE, frame = FALSE, theme = "red.pal",
-            author = "Ronan Ysebaert, RIATE, 2019")
-
-
-## ----gdev_listing, fig.width=7, fig.height=5, warning = FALSE, cache = FALSE----
-# general deviation - Top 10 of the potential contributors in regard 
-# Drop geometries
-df <- st_set_geometry(com, NULL)
-
-# to their total amount of income
-df$gdevabsPerc <- df$gdevabs / df$INC * 100
-df <- df[order(df$gdevabsPerc, decreasing = TRUE), ]
-df[1:10, c("gdevabsmil","gdevabsPerc")]
-
-# general deviation - Top 10 of the potential receivers in regard to 
-# their total amount of income
-df <- df[order(df$gdevabsPerc, decreasing = FALSE), ]
-df[1:10, c("gdevabsmil", "gdevabsPerc")]
+            north = TRUE, scale = 5, col = "white", coltitle = "black",
+            author = "Ronan Ysebaert, RIATE, 2021")
 
 ## ----lorenz_plot, fig.width=7, fig.height=5, warning = FALSE, cache = FALSE, fig.align = 'center'----
+library(ineq)
+#  Concentration of X as regards to concentration of Y
+Lc.p <- Lc(com$INC, com$TH)
+Lp <- data.frame(cumX = 100 * Lc.p$L, cumY = 100 * Lc.p$p)
 
-# Lorenz Curve
-par(mar=c(4, 4, 4, 4))
-par(pty = "s")
+# Plot concentrations
+par(mar = c(4,4,1.2,4), xaxs = "i", yaxs = "i", pty = "s")
+plot(Lp$cumY,
+     Lp$cumX,
+     type = "l",
+     col = "red",
+     lwd = 2,
+     panel.first = grid(10,10),
+     ylab = "Income (cumulative percentage)",  
+     cex.axis = 0.8,
+     cex.lab = 0.9,
+     xlab = "Households (cumulative percentage)",
+     ylim = c(0,100),
+     xlim = c(0,100))  
 
-plot(Lc(com$INC, com$TH),                 
-     panel.first = grid(10, 10),
-     main = "Lorenz Curve - Income distribution",
-     xlab = "Percent of income (cumulative)",
-     ylab = "Percent of households",
-     ylim = c(0,1),
-     xlim = c(0,1),
-     asp = 1)
+lines(c(0,100), c(0,100), lwd = 2)
 
-# Inequality indexes (Gini, standard deviation and cofficient of variation)
-Gini(com$ratio)
-sd(com$ratio, na.rm = TRUE)
-sd(com$ratio, na.rm = TRUE)/mean(com$ratio, na.rm = TRUE) * 100
+# Ease plot reading
+xy1 <- Lp[which.min(abs(50 - Lp$cumX)),]
+xy2 <- Lp[which.min(abs(50 - Lp$cumY)),]
+
+xy <- rbind(xy1, xy2)
+
+points(y = xy[,"cumX"], 
+       x = xy[,"cumY"], 
+       pch = 21,  
+       cex = 1.5,
+       bg = "red")
+
+text(y = xy[,"cumX"], 
+     x = xy[,"cumY"],
+     label = paste(round(xy[,"cumX"],0), round(xy[,"cumY"],0), sep = " , "),  
+     pos = 2,
+     cex = 0.6)
+
 
 ## ----mdevrel_plot, fig.width=7, fig.height=5, warning = FALSE, cache = FALSE----
 # Territorial relative deviation calculation
@@ -224,70 +220,39 @@ com$mdevrel <- tdev(x = com,
                     type = "rel",
                     key = "LIBEPT")
 
-# Territorial absolute deviation calculation
-com$mdevabs <- tdev(x = com, 
-                    var1 = "INC", 
-                    var2 = "TH", 
-                    type = "abs",
-                    key = "LIBEPT")
-
-# Territorial deviation in million Euros
-com$mdevabsmil <- com$mdevabs / 1000000
-
 # Cartography
 # Plot layout
 par(mfrow = c(1, 1), mar = c(0, 0, 1.2, 0))
 
-# Plot territories
-plot(st_geometry((com)), col = "grey70", border = "#EDEDED",lwd = 0.25)
-plot(st_geometry((ept)), border = "#1A1A19", lwd = 1, add = T)
+# Territorial deviation mapping
+choroLayer(x = com,
+           var = "mdevrel",
+           col = cols,
+           breaks = c(min(com$mdevrel, na.rm = TRUE), 67, 91, 100, 125, 150,
+                      max(com$mdevrel, na.rm = TRUE)),
+           border = "#f0f0f0",
+           lwd = 0.25,
+           legend.pos = "topleft",
+           legend.title.txt = "Deviation to the territorial context (100 = EPT average)",
+           legend.values.rnd = 0)
 
-# Territorial deviation (relative and absolute) cartography
-propSymbolsChoroLayer(x = com,
-                      var = "mdevabsmil", var2 = "mdevrel",
-                      add = TRUE,
-                      inches = 0.3,
-                      col = carto.pal(pal1 = "blue.pal", n1 = 3,
-                                      pal2 = "wine.pal", n2 = 3),
-                      breaks = c(min(com$mdevrel, na.rm = TRUE),
-                                 75, 90, 100, 111, 133,
-                                 max(com$mdevrel, na.rm = TRUE)),
-                      border = "#f0f0f0",
-                      lwd = 0.25,
-                      legend.var.pos = "left", legend.var2.pos = "topleft",
-                      legend.var.title.txt = "Redistribution (Million euros)",
-                      legend.var2.title.txt = "Deviation to the territorial context (100 = EPT average)",
-                      legend.var.style = "e",
-                      legend.var.values.rnd = 0,
-                      legend.var2.values.rnd = 0)
+# Plot EPT layer
+plot(ept$geometry, border = "#1A1A19", lwd = 1, add = TRUE)
 
+# Labels to ease comment location
+labelLayer(x = com[com$LIBCOM %in% c("Le Raincy", "Rungis", "Sceaux",
+                                     "Marnes-la-Coquette") ,],
+           txt = "LIBCOM", col= "black", cex = 0.6, font = 2,
+           halo = TRUE, bg = "white", r = 0.05)
 
 # layout 
 layoutLayer(title = "Territorial deviation - Tax income per households, 2013",
             sources = "GEOFLA® 2015 v2.1, Apur, impots.gouv.fr",
-            north = TRUE, scale = 5, tabtitle = TRUE, frame = FALSE, theme = "red.pal",
-            author = "Ronan Ysebaert, RIATE, 2019")
-
-
-## ----mdev_listing, fig.width=7, fig.height=5, warning = FALSE, cache = FALSE----
-# general deviation - Top 10 of the potential contributors in regard 
-# Drop geometries
-df <- st_set_geometry(com, NULL)
-
-# Territorial deviation - Top 10 of the potential contributors as regards to their total amount of income
-df$mdevabsPerc <- df$mdevabs / df$INC * 100
-df <- df[order(df$mdevabsPerc, decreasing = TRUE), ]
-df[1:10, c("mdevabsmil", "mdevabsPerc")]
-
-# Territorial deviation - Top 10 of the potential receivers as regards to their total amount of income
-df <- df[order(df$mdevabsPerc, decreasing = FALSE), ]
-df[1:10, c("mdevabsmil", "mdevabsPerc")]
+            north = TRUE, scale = 5, col = "white", coltitle = "black",
+            author = "Ronan Ysebaert, RIATE, 2021")
 
 ## ----mdev_boxplot, fig.width=7, fig.height=6, warning = FALSE, cache = FALSE, fig.align = 'center'----
-
-par(cex.lab = 1)
-par(cex.axis = 0.75)
-par(mar = c(4, 4, 2, 2))
+par(mar = c(4, 4, 1.2, 2))
 
 # Drop geometries
 df <- st_set_geometry(com, NULL)
@@ -305,6 +270,7 @@ boxplot(df$gdevrel ~ df$EPT,
         col = col,
         ylab = "Global deviation",
         xlab = "Territorial deviation",
+        cex.lab = 0.9,
         varwidth = TRUE,
         range = 1,
         outline = TRUE,
@@ -328,75 +294,51 @@ legend("topleft",
        pt.cex = 1,
        title = "Territorial contexts (ordered by mean value of global deviation)")
 
-
 ## ----localdevrel_plot, fig.width=7, fig.height=5, warning = FALSE, cache = FALSE----
-
 # Spatial relative deviation calculation
-com$ldevrel <- sdev(x = com, xid = "DEPCOM", var1 = "INC", var2 = "TH",
-                    order = 1, type = "rel")
-
-
-# Spatial absolute deviation calculation
-com$ldevabs <- sdev(x = com, xid = "DEPCOM", var1 = "INC", var2 = "TH",
-                    order = 1, type = "abs")
-
-# Spatial deviation in million Euros
-com$ldevabsmil <- com$ldevabs / 1000000
+com$ldevrel <- sdev(x = com, 
+                    xid = "DEPCOM", 
+                    var1 = "INC", 
+                    var2 = "TH",
+                    order = 1,
+                    type = "rel")
 
 # Cartography
 # Plot layout
 par(mfrow = c(1, 1), mar = c(0, 0, 1.2, 0))
 
-# Plot territories
-plot(st_geometry(com), col = "grey70", border = "#EDEDED",lwd = 0.25)
-plot(st_geometry(ept), border = "#1A1A19",lwd = 1, add = T)
-
 # Territorial deviation (relative and absolute) cartography
-propSymbolsChoroLayer(x = com,
-                      var = "ldevabsmil", var2 = "ldevrel",
-                      add = TRUE,
-                      inches = 0.3,
-                      col = carto.pal(pal1 = "blue.pal", n1 = 3,
-                                      pal2 = "wine.pal", n2 = 3),
-                      breaks = c(min(com$ldevrel, na.rm = TRUE),
-                                 75, 90, 100, 111, 133,
+choroLayer(x = com,
+           var = "ldevrel",
+           col = cols,
+           breaks = c(min(com$ldevrel, na.rm = TRUE), 67, 91, 100, 110, 125,
                                  max(com$ldevrel, na.rm = TRUE)),
-                      border = "#f0f0f0",
-                      lwd = 0.25,
-                      legend.var.pos = "left", legend.var2.pos = "topleft",
-                      legend.var.title.txt = "Redistribution (Million euros)",
-                      legend.var2.title.txt = "Deviation to the spatial context 
-                      (100 = average of the contiguous territorial units - order 1)",
-                      legend.var.style = "e",
-                      legend.var.values.rnd = 0,
-                      legend.var2.values.rnd = 0)
+           border = "#f0f0f0",
+           lwd = 0.25,
+           legend.pos = "topleft",
+           legend.title.txt = "Deviation to the spatial context\n(100 = average of the contiguous territorial units - order 1)",
+           legend.values.rnd = 0)
+
+# Plot EPT
+plot(ept$geometry, border = "#1A1A19",lwd = 1, add = T)
+
+# Labels to ease comment location
+labelLayer(x = com[com$LIBCOM %in% c("Le Raincy", "Vaucresson", "Sceaux",
+                                     "Marnes-la-Coquette", "Saint-Maur-des-Fosses",
+                                     "Puteaux", "Saint-Ouen", "Bagneux",
+                                     "Clichy-sous-Bois", "Clichy") ,],
+           txt = "LIBCOM", col= "black", cex = 0.6, font = 2,
+           halo = TRUE, bg = "white", r = 0.05, overlap = FALSE)
+
 
 # layout 
 layoutLayer(title = "Spatial deviation - Tax income per households, 2013",
             sources = "GEOFLA® 2015 v2.1, Apur, impots.gouv.fr",
-            north = TRUE, scale = 5, tabtitle = TRUE, frame = FALSE, theme = "red.pal",
-            author = "Ronan Ysebaert, RIATE, 2019")
-
-
-## ----ldev_listing, fig.width=7, fig.height=5, warning = FALSE, cache = FALSE----
-# Drop geometries
-df <- st_set_geometry(com, NULL)
-
-# Spatial deviation - Top 10 of the potential contributors as regards to their total amount of income
-df$ldevabsPerc<- df$ldevabs / df$INC * 100
-df<-df[order(df$ldevabsPerc, decreasing = TRUE), ]
-df[1:10, c("ldevabsmil","ldevabsPerc")]
-
-# Spatial deviation - Top 10 of the potential receivers as regards to their total amount of income
-df<-df[order(df$ldevabsPerc, decreasing = FALSE), ]
-df[1:10, c("ldevabsmil","ldevabsPerc")]
-
+            north = TRUE, scale = 5, col = "white", coltitle = "black",
+            author = "Ronan Ysebaert, RIATE, 2021")
 
 ## ----spat_autocorr_plot, fig.width=7, fig.height=5, warning = FALSE, cache = FALSE, fig.align = 'center'----
-
-par(cex.lab = 1)
-par(cex.axis = 0.75)
-par(mar = c(4, 4, 2, 2))
+par(cex.lab = 1, cex.axis = 0.75, mar = c(4, 4, 1.2, 2))
 
 # Drop geometries
 df <- st_set_geometry(com, NULL)
@@ -419,7 +361,7 @@ df$LIBEPT <- ordered(df$LIBEPT,
 
 # colors
 df$col <- as.factor(df$LIBEPT)
-levels(df$col) <- cols
+levels(df$col) <- colsEPT
 
 # Spatial autocorrelation
 lm <- summary.lm(lm(ldevrel ~ gdevrel, df))
@@ -436,11 +378,11 @@ plot(df$gdevrel, df$ldevrel,
 abline((lm(df$ldevrel ~ df$gdevrel)), col = "red", lwd =1)
 
 # Specify linear regression formula and R-Squared of the spatial autocorrelation on the plot
-text(140,65, pos = 4, cex = 0.8, 
+text(110,60, pos = 4, cex = 0.7, 
      labels = (paste("Local Deviation =", round(lm$coefficients["gdevrel","Estimate"], digits = 3),
                      "* (Global Deviation) +", round(lm$coefficients["(Intercept)","Estimate"], 
                                                      digits = 3))))
-text(140,55, pos = 4, cex = 0.8, 
+text(110,55, pos = 4, cex = 0.7, 
      labels = (paste("R-Squared =", round(summary(lm(ldevrel~gdevrel, com ))$r.squared, digits = 2))))
 
 abline (h = seq(40,290,10), col = "gray70", lwd = 0.25, lty = 3)
@@ -452,198 +394,334 @@ abline (v = seq(50,250,50), col = "gray0", lwd = 1, lty = 1)
 legend("topleft",
        legend = levels(df$LIBEPT),
        pch = 20,
-       col = cols,
+       col = colsEPT,
        cex = 0.6,
        pt.cex = 1,
        title = "Territorial context")
 
-
 ## ----spat_autocor_res_plt, fig.width=7, fig.height=5, warning = FALSE, cache = FALSE, fig.align = 'center'----
-
-par(cex.lab = 1)
-par(cex.axis = 0.75)
-par(mar = c(4, 4, 2, 2))
+par(cex.lab = 1, cex.axis = 0.75, mar = c(4, 4, 2, 2))
 
 # Standardized residual calculation
 lm <- lm(ldevrel ~ gdevrel, df)
-res.standard <- rstandard(lm)
+df$res <- rstandard(lm)
 
-#risk alpha = 0.1
-alpha <- 0.1
+#risk alpha (0.1 usually)
+alpha <- 0.055
 
 # Calculation of the threshold using T-Student at (n-p-1) degrees of freedom
-seuil.standard <- qt(1 - alpha / 2, nrow(com) - 1)
+thr <- qt(1 - alpha / 2, nrow(com) - 1)
 
 # Plot residuals
-plot(df$ldevrel, res.standard,
+plot(df$ldevrel, df$res,
      xlab = "Local deviation", cex.lab = 0.8,
-     xlim = c(60, 180),
-     ylab = "Standardized residuals of spatial autocorrelation", cex.lab = 0.8,
+     ylim = c(-3.5, 3.5),
+     xlim = c(40, 200),
+     ylab = "Standardized residuals of spatial autocorrelation", 
+     cex.lab = 0.8,
+     cex.axis = 0.8,
      pch = 20,
-     col = as.vector(df$col),
-     cex.axis = 0.8)
+     col = as.vector(df$col))
 
 # Adding thresholds
-abline(h = -seuil.standard, col = "red")
-abline(h = +seuil.standard, col = "red")
+abline(h = - thr, col = "red")
+abline(h = + thr, col = "red")
 abline(h = 0, col = "red")
 
 # Detecting exceptional values and labeling them on the plot
-ab.standard <- df[res.standard < -seuil.standard | res.standard > +seuil.standard,]
+ab <- df[df$res < -thr | df$res > thr,]
 
-for (i in 1 : nrow(ab.standard)){
-  # Take the territorial units listing below and above the threshold
-  municipalities <- row.names(ab.standard)[i]
-  # Plot the residual names
-  text(com[municipalities,"ldevrel"], res.standard[municipalities], municipalities, cex = 0.5, pos = 4)
-}
+# Plot residual labels
+text(x = ab[,"ldevrel"], y = ab[,"res"], ab[,"LIBCOM"], cex = 0.5, pos = 4)
 
 abline (v = seq(50, 200, 10), col = "gray70", lwd = 0.25, lty = 3)
 abline (v = seq(50, 200, 50), col = "gray0", lwd = 1, lty = 1)
 
 # Plot the legend (territorial zoning)
 legend("topleft",
-       legend = levels(ab.standard$LIBEPT),
+       legend = levels(ab$LIBEPT),
        pch = 20,
-       col = cols,
+       col = colsEPT,
        cex = 0.6,
        pt.cex = 1,
        title = "Territorial context")
 
-## ----effect_distance, fig.width=7, fig.height=5, warning = FALSE, cache = FALSE, fig.align = 'center'----
+## ----redistributions, fig.width=7, fig.height=5-------------------------------
+# general absolute deviation 
+com$gdevabs <- gdev(x = com, 
+                    var1 = "INC", 
+                    var2 = "TH", 
+                    type = "abs")
 
-par(cex.lab = 1)
-par(cex.axis = 0.75)
-par(mar = c(4, 4, 2, 2))
+# Territorial absolute deviation calculation
+com$mdevabs <- tdev(x = com, 
+                    var1 = "INC", 
+                    var2 = "TH", 
+                    type = "abs",
+                    key = "LIBEPT")
 
-# Set the targeted distances for measuring spatial deviation
-dfSpa <- data.frame(dist = seq(0, 35000, by = 500), ineq = NA) 
+# Transform the values in million Euros
+com$gdevabsmil <- com$gdevabs / 1000000
+com$mdevabsmil <- com$mdevabs / 1000000
 
-# Calculation of spatial deviations in absolute terms for all the distances retained
-spat <- function(x){
-  ldevabs <- sdev(x = com,  xid = "DEPCOM",  var1 = "INC", var2 = "TH",
-                  dist = x[1], type = "abs")
-  ldevabspos <- ldevabs[ldevabs>0]
-  sum(ldevabspos)
-}
+# Deviation orientation
+com$gdevsign <- ifelse(com$gdevabsmil> 0, "Income surplus", "Income deficit")
+com$mdevsign <- ifelse(com$mdevabsmil > 0, "Income surplus", "Income deficit")
 
-dfSpa$ineq <- apply(dfSpa, 1, spat)
+# Deviation maps 
+par(mar = c(0, 0, 1.2, 0), mfrow = c(1,2))
 
-# Convert results in million Euros and km
-dfSpa$ineq <- dfSpa$ineq / 1000000
-dfSpa$dist <- dfSpa$dist / 1000
-dfSpa[is.na(dfSpa)] <- 0
+# General deviation
+# Plot territories
+plot(st_geometry(com), col = "grey70", border = "#EDEDED", lwd = 0.25)
+plot(st_geometry(ept), border = "#1A1A19", lwd = 1, add = TRUE)
 
-# Set the targeted contiguity order for measuring spatial deviation
-dfOrder <- data.frame(order = seq(0, 20, by = 1), ineq = NA) 
+propSymbolsTypoLayer(x = com, var = "gdevabsmil", var2 = "gdevsign",
+                     symbols = "circle",
+                     inches = 0.15,
+                     col = c("#F6533A","#515FAA"),
+                     legend.var.pos = "n",
+                     legend.var2.pos = "n",
+                     fixmax = max(abs(com$gdevabsmil)))
 
-# Calculation of spatial deviations in absolute terms for all the contiguities retained
-spat <- function(x){
-  ldevabs <- sdev(x = com, xid = "DEPCOM", var1 = "INC", var2 = "TH", order = x[1],
-                  type = "abs")
-  
-  ldevabspos <- ldevabs[ldevabs>0]
-  sum(ldevabspos)
-}
+# Labels to ease comment location
+labelLayer(x = com[com$LIBCOM %in% c("Paris 7e Arrondissement",
+                                     "Neuilly-sur-Seine", "Aubervilliers") ,],
+           txt = "LIBCOM", col= "black", cex = 0.6, font = 2,
+           halo = TRUE, bg = "white", r = 0.05, overlap = FALSE)
 
-dfOrder$ineq <- apply(dfOrder, 1, spat)
+# Layout map 1
+layoutLayer(title = "General deviation (Metrople du Grand Paris)", 
+            tabtitle = TRUE, col = "white", 
+            coltitle = "black", postitle = "center", scale = FALSE,
+            author = "Ronan Ysebaert, RIATE, 2021")
 
-# Convert results in million Euros
-dfOrder$ineq <- dfOrder$ineq / 1000000
-dfOrder[is.na(dfOrder)] <- 0
+# Territorial deviation
+plot(st_geometry(com), col = "grey70", border = "#EDEDED", lwd = 0.25)
+plot(st_geometry(ept), border = "#1A1A19", lwd = 1, add = TRUE)
 
-# Combined plot - Plot 1: Euclidian Distance
-plot.new()
-plot.window(xlim = c(0,22500), ylim = c(0,35), xaxs = "i", yaxs = "i")
-axis(1, pos = 0, xlim = c(0,22500))
-axis(2, col = '#488b37', pos = 0, ylim = c(0,35))
-abline (v = seq(0, 22000, 1000), col = "gray30", lwd = 0.25)
-abline (h = seq(0, 35, 5), col = "#488b37", lwd = 0.25)
-lines(dfSpa$dist ~ dfSpa$ineq, type = 'b', col = '#488b37', lwd = 0.25, lty = 1, pch = 20)
-title(xlab = "Mass of numerator to redistribute required to reach the equilibrium (million Euros)")
-mtext("neighborhood: Euclidian distance (km)", col = "#488b37", side = 2, line = 2)
+propSymbolsTypoLayer(x = com, var = "mdevabsmil", var2 = "mdevsign",
+                     symbols = "circle",
+                     inches = 0.15,
+                     col = c("#F6533A","#515FAA"),
+                     legend.var.pos = "n",
+                     legend.var2.pos = "n",
+                     fixmax = max(abs(com$gdevabsmil)))
 
-# Adding plot 2 : contiguity
-plot.window(xlim = c(0, 22500), ylim = c(0,20), xaxs = "i", yaxs = "i")
-axis(4, col ='#7a378b')
-abline (h = seq(0, 20, 5), col = "#7a378b", lwd = 0.25, lty = 1)
-lines(dfOrder$order ~ dfOrder$ineq, type = 'b', col = '#7a378b', lwd = 0.25, lty = 1, pch = 20)
-mtext("neighborhood: Contiguity order", side = 4, col = "#7a378b")
+# Labels to ease comment location
+labelLayer(x = com[com$LIBCOM %in% c("Marnes-la-Coquette",
+                                     "Nanterre", "Clichy-sous-Bois") ,],
+           txt = "LIBCOM", col= "black", cex = 0.6, font = 2,
+           halo = TRUE, bg = "white", r = 0.05, overlap = FALSE)
 
-#title for the graph
-title(main = "Numerator redistribution as regards to spatial and contiguity parameters")
-box(which = "plot")
- 
+# Legend cirles
+legendCirclesSymbols(pos = "topleft", inches = 0.15, col = "grey",
+                     var = c(500, 2000, max(com$gdevabsmil)),
+                     title.txt = "Income redistribution\n(million Euros)")
+
+# Legend typo
+legendTypo(pos = "bottomleft", title.txt = "Redistribution nature", col = c("#F6533A","#515FAA"),
+           categ = c("Income surplus", "Income deficit"), nodata = FALSE)
+
+# Layout map 2
+layoutLayer(title = "Territorial deviation (EPT of belonging)", 
+            tabtitle = TRUE, col = "white", 
+            coltitle = "black", postitle = "center", scale = 5)
+
+## ----gdev_listing, fig.width=7, fig.height=5, warning = FALSE, cache = FALSE----
+# general deviation - Top 10 of the potential contributors in regard 
+# Drop geometries
+df <- st_set_geometry(com, NULL)
+row.names(df) <- df$LIBCOM
+
+# to their total amount of income
+df$gdevabsPerc <- df$gdevabs / df$INC * 100
+df <- df[order(df$gdevabsPerc, decreasing = TRUE), ]
+df[1:10, c("gdevabsmil","gdevabsPerc")]
+
+# general deviation - Top 10 of the potential receivers in regard to 
+# their total amount of income
+df <- df[order(df$gdevabsPerc, decreasing = FALSE), ]
+df[1:10, c("gdevabsmil", "gdevabsPerc")]
+
+## ----mdev_listing, fig.width=7, fig.height=5, warning = FALSE, cache = FALSE----
+# general deviation - Top 10 of the potential contributors in regard 
+# Drop geometries
+df <- st_set_geometry(com, NULL)
+row.names(df) <- df$LIBCOM
+
+# Territorial deviation - Top 10 of the potential contributors as regards to their total amount of income
+df$mdevabsPerc <- df$mdevabs / df$INC * 100
+df <- df[order(df$mdevabsPerc, decreasing = TRUE), ]
+df[1:10, c("mdevabsmil", "mdevabsPerc")]
+
+# Territorial deviation - Top 10 of the potential receivers as regards to their total amount of income
+df <- df[order(df$mdevabsPerc, decreasing = FALSE), ]
+df[1:10, c("mdevabsmil", "mdevabsPerc")]
+
+## ----bidev_plot, fig.width=7, fig.height=8------------------------------------
+par(mar = c(0, 0, 0, 0), mfrow = c(1,1))
+
+# Prerequisite  - Compute 2 deviations
+com$gdev <- gdev(x = com, var1 = "INC", var2 = "TH")
+com$tdev <- tdev(x = com, var1 = "INC", var2 = "TH", key = "EPT")
+
+# EX1 standard breaks with four labels
+plot_bidev(x = com, 
+           dev1 = "gdev", 
+           dev2 = "tdev",
+           dev1.lab = "General deviation (MGP Area)",
+           dev2.lab = "Territorial deviation (EPT of belonging)",
+           lib.var = "LIBCOM",
+           lib.val =  c("Marolles-en-Brie", "Suresnes", 
+                        "Clichy-sous-Bois", "Les Lilas"))
+
+## ----bidev_map, fig.width=7, fig.height=5-------------------------------------
+par(mfrow = c(1,2), mar = c(0,4,0,0))
+
+bidev <- map_bidev(x = com, dev1 = "gdev", dev2 = "tdev",
+                   breaks = c(50, 100, 200))
+
+# Unlist resulting function
+com <- bidev$geom
+cols <- bidev$cols
+
+# Cartography
+typoLayer(x = com, var = "bidev", border = "grey50",
+          col = cols, lwd = 0.2, legend.pos = "n")
+
+plot(st_geometry(ept), border = "#1A1A19", lwd = 1, add = TRUE)
+
+ # Label territories in the C3 category
+labelLayer(x = com[com$bidev == "C3",], txt = "LIBCOM", halo = TRUE)
+
+layoutLayer(title = "2-Deviations synthesis : Situation as regards to general and territorial contexts",
+            sources = "GEOFLA® 2015 v2.1, Apur, impots.gouv.fr",
+            north = TRUE, scale = 5, col = "white", coltitle = "black",
+            author = "Ronan Ysebaert, RIATE, 2021")
+
+plot_bidev(x = com,  dev1 = "gdev",  dev2 = "tdev", 
+           dev1.lab = "General deviation (MGP Area)",
+           dev2.lab = "Territorial deviation (EPT of belonging)",
+           breaks = c(50, 100, 200),
+           lib.var = "LIBCOM", lib.val = "Clichy-sous-Bois", cex.lab = 0.8)
 
 ## ----synth7_1, fig.width=7, fig.height=5, warning = FALSE, cache = FALSE, fig.align = 'center'----
-# Compute the synthesis DataFrame (relative deviations)
-synthesis <- mst(x = com, var1 = "INC", var2 = "TH", key = "EPT", order = 1, 
-                 threshold = 125, superior = TRUE) 
-subset(synthesis, mst == 7, select = c(ratio, gdevrel, tdevrel, sdevrel, mst))
-           
+# Prerequisite  - Compute the 3 deviations
+com$gdev <- gdev(x = com, var1 = "INC", var2 = "TH")
+com$tdev <- tdev(x = com, var1 = "INC", var2 = "TH", key = "EPT")
+com$sdev <- sdev(x = com, var1 = "INC", var2 = "TH", order = 1)
 
-## ----synthesishigh, fig.width=7, fig.height=5, warning = FALSE, cache = FALSE----
+
+# Multiscalar typology - wealthiest territorial units
+# Row names = municipality labels
+row.names(com) <- com$LIBCOM
+
+# Compute mst
+com$mstW <- mst(x = com, gdevrel = "gdev", tdevrel = "tdev", sdevrel = "sdev", 
+                threshold = 125, superior = TRUE)
+
+subset(com, mstW == 7, select = c(ratio, gdev, tdev, sdev, mstW), drop = T)
+
+## ----map_mst1, fig.width=7, fig.height=5--------------------------------------
 par(mfrow = c(1, 1), mar = c(0, 0, 1.2, 0))
 
-mapsynthesis <-mapmst(x = com, var1 = "INC", var2 = "TH", key = "EPT",
-                      order = 1,threshold = 125, superior = TRUE)
+# Compute mapmst
+mst <- map_mst(x = com, gdevrel = "gdev", tdevrel = "tdev", sdevrel = "sdev", 
+              threshold = 125, superior = TRUE)
 
-# add a layout
-layoutLayer(title = "Multiscalar synthesis - Income per household 2013",
-            sources = "GEOFLA® 2015 v2.1, Apur, impots.gouv.fr",
-            north = TRUE, scale = 5, tabtitle = TRUE, frame = FALSE, theme = "red.pal",
-            author = "Ronan Ysebaert, RIATE, 2019
-100: Deviation average
-G: Situation as compared to the global context (Grand Paris Area) 
-T: Situation as compared to the territorial context (EPT of belonging) 
-S: Sitation as compared to the neigbourhood context (contiguity order 1)")
+# Unlist resulting function
+com <- mst$geom
+cols <- mst$cols
+leg_val <- mst$leg_val
 
-# add labels for territorial objects above 125 % for all the deviations
-labelLayer(x = mapsynthesis[ which(mapsynthesis$mst == 7),], txt = "LIBCOM", 
-           cex = 0.5, halo = TRUE, overlap = FALSE)
 
-## ----synthesis125_class7, fig.width=7, fig.height=5, warning = FALSE, cache = FALSE, eval = TRUE----
-# municipalities in favorable situation for the three contexts
-subset(synthesis, mst == 7, select = c(gdevrel, tdevrel, sdevrel, mst))
-# municipalities in favorable situation in a global context or in a global and in an territorial contexts
-subset(synthesis, mst == 1 | mst == 3, select = c(gdevrel, tdevrel, sdevrel, mst))
-# municipalities in favorable situation in a spatial context or in a spatial and a territorial context 
-subset(synthesis,  mst == 4 | mst == 6, select = c(gdevrel, tdevrel, sdevrel, mst))
+# Cartography
+library(cartography)
+typoLayer(x = com, var = "mst", border = "grey50",
+          col = cols, lwd = 0.2, legend.pos = "n")
 
-## ----synthesislow, fig.width=7, fig.height=5, warning = FALSE, cache = FALSE, eval = TRUE----
+plot(st_geometry(ept), border = "#1A1A19", lwd = 1, add = TRUE)
 
-par(mfrow = c(1, 1), mar = c(0, 0, 1.2, 0))
+legendTypo(col = cols, categ = leg_val,
+           title.txt = "Situation on General (G)\nTerrorial (T) and\nSpatial (S) contexts",
+           nodata = FALSE, pos = "topleft")
 
-mapsynthesis <- mapmst(x = com, var1 = "INC", var2 = "TH", key = "EPT",
-                       order = 1,threshold = 80, superior = FALSE)
-
-# add a layout
-layoutLayer(title = "Multiscalar synthesis - Income per household 2013",
-            sources = "GEOFLA® 2015 v2.1, Apur, impots.gouv.fr",
-            north = TRUE, scale = 5, tabtitle = TRUE, frame = FALSE, theme = "red.pal",
-            author = "Ronan Ysebaert, RIATE, 2019
-100: Deviation average
-G: Situation as compared to the global context (Grand Paris Area) 
-T: Situation as compared to the territorial context (EPT of belonging) 
-S: Sitation as compared to the neigbourhood context (contiguity order 1)")
-
-# add labels for territorial objects above 125 % for all the deviations
-labelLayer(x = mapsynthesis[ which(mapsynthesis$mst == 7),], txt = "LIBCOM", 
+labelLayer(x = com[com$mst == 7,], txt = "LIBCOM",
            cex = 0.6, halo = TRUE, overlap = FALSE)
 
+layoutLayer(title = "3-Deviations synthesis : Territorial units above index 125",
+            sources = "GEOFLA® 2015 v2.1, Apur, impots.gouv.fr",
+            north = TRUE, scale = 5, col = "white", coltitle = "black",
+            author = "Ronan Ysebaert, RIATE, 2021")
 
-## ----synthesis80_class7, fig.width=7, fig.height=5, warning = FALSE, cache = FALSE, eval = TRUE----
-synthesis <- mst(x = com, var1 = "INC", var2 = "TH", key = "EPT", order = 1, threshold = 125, superior = TRUE) 
-# municipalities in favorable situation for the three contexts
-subset(synthesis, mst == 7, select = c(gdevrel, tdevrel, sdevrel, mst))
-# municipalities in favorable situation in a global context or in a global and in an territorial contexts
-subset(synthesis, mst == 1 | mst == 3, select = c(gdevrel, tdevrel, sdevrel, mst))
+## ----map_mst2, fig.width=7, fig.height=5--------------------------------------
+par(mfrow = c(1, 1), mar = c(0, 0, 1.2, 0))
+
+# Compute mapmst
+mst <- map_mst(x = com, gdevrel = "gdev", tdevrel = "tdev", sdevrel = "sdev", 
+              threshold = 80, superior = FALSE)
+
+# Unlist resulting function
+com <- mst$geom
+cols <- mst$cols
+leg_val <- mst$leg_val
+
+
+# Cartography
+library(cartography)
+typoLayer(x = com, var = "mst", border = "grey50",
+          col = cols, lwd = 0.2, legend.pos = "n")
+
+plot(st_geometry(ept), border = "#1A1A19", lwd = 1, add = TRUE)
+
+legendTypo(col = cols, categ = leg_val,
+           title.txt = "Situation on General (G)\nTerrorial (T) and\nSpatial (S) contexts",
+           nodata = FALSE, pos = "topleft")
+
+labelLayer(x = com[com$mst == 7,], txt = "LIBCOM",
+           cex = 0.6, halo = TRUE, overlap = FALSE)
+
+layoutLayer(title = "3-Deviations synthesis : Territorial units under index 80",
+            sources = "GEOFLA® 2015 v2.1, Apur, impots.gouv.fr",
+            north = TRUE, scale = 5, col = "white", coltitle = "black",
+            author = "Ronan Ysebaert, RIATE, 2021")
+
+## ----synthesis80_class7-------------------------------------------------------
+# Multiscalar typology - Lagging territorial units
+# Row names = municipality labels
+row.names(com) <- com$LIBCOM
+
+# Compute mst
+com$mstP <- mst(x = com, gdevrel = "gdev", tdevrel = "tdev", sdevrel = "sdev", 
+                threshold = 80, superior = FALSE)
+
+# municipalities in lagging situation for the three contexts
+subset(com, mstP == 7, select = c(ratio, gdev, tdev, sdev, mstP), drop = T)
+
+## ----synthesis80_class3-------------------------------------------------------
+# municipalities in lagging situation in the global and territorial contexts
+subset(com, mstP == 3, select = c(ratio, gdev, tdev, sdev, mstP), drop = T)
 # municipalities in favorable situation in a spatial context or in a spatial and a territorial context 
-subset(synthesis,  mst == 4 | mst == 6, select = c(gdevrel, tdevrel, sdevrel, mst))
+subset(com, mstP == 4 | mstP == 6, select = c(ratio, gdev, tdev, sdev, mstP), drop = T)
 
+## ----plot_mst, fig.width = 7, fig.height=6------------------------------------
+par(mfrow = c(1, 1), mar = c(4, 6, 4, 4))
+
+# Synthesis barplot
+plot_mst(x = com, gdevrel = "gdev", tdevrel = "tdev", sdevrel = "sdev", lib.var = "LIBCOM", 
+         lib.val = c("Neuilly-sur-Seine", "Clichy-sous-Bois", "Suresnes", "Les Lilas"))
 
 ## ----synthesisabs, fig.width=7, fig.height=5, warning = FALSE, cache = FALSE, eval = TRUE----
+# Local redistribution (not yet calculated)
+com$ldevabs <- sdev(x = com, xid = "DEPCOM", var1 = "INC", var2 = "TH",
+                    order = 1, type = "abs")
+com$ldevabsmil <- com$ldevabs / 1000000
 
 # Compute the synthesis DataFrame (absolute deviations)
-mas(x = com, xid = "DEPCOM", var1 = "INC", var2 = "TH", key = "EPT", order = 1) 
+mas(x = com, 
+    gdevabs = "gdevabsmil", 
+    tdevabs = "mdevabsmil",
+    sdevabs = "ldevabsmil",
+    num = "INCM") 
 
