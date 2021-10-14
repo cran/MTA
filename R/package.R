@@ -45,8 +45,7 @@ NULL
 #' @docType data
 #' @examples
 #' library(sf)
-#' data(GrandParisMetropole)
-#' plot(st_geometry(ept))
+#' ept <- st_read(system.file("metroparis.gpkg", package = "MTA"), layer = "ept", quiet = TRUE)
 NULL
 
 #' @title Grand Paris Metropole Communes Data
@@ -70,8 +69,8 @@ NULL
 #' \url{https://www.apur.org/fr/nos-travaux/composition-12-territoires-metropole-grand-paris}
 #' @docType data
 #' @examples
-#' data(GrandParisMetropole)
-#' head(com)
+#' library(sf)
+#' com <- st_read(system.file("metroparis.gpkg", package = "MTA"), layer = "com", quiet = TRUE)
 NULL
 
 
@@ -86,11 +85,7 @@ NULL
 #' 
 #' @docType data
 #' @examples
-#' data(GrandParisMetropole)
-#' cardist[1:10,1:10]
+#' cardist <- read.table(system.file("cardist.txt", package = "MTA"), check.names = FALSE)
+#' cardist <- as.matrix(cardist)
+#' cardist[1:10, 1:10]
 NULL
-
-
-
-
-

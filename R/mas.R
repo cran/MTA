@@ -11,7 +11,10 @@
 #' according to the 3 contexts, expressed in numerator measure unit and as a share of the numerator mass.
 #' @export
 #' @examples
-#' data("GrandParisMetropole")
+#' # Load data
+#' library(sf)
+#' com <- st_read(system.file("metroparis.gpkg", package = "MTA"), layer = "com", quiet = TRUE)
+#' 
 #' # general absolute deviation 
 #' com$gdevabs <- gdev(x = com, var1 = "INC",var2 = "TH", type = "abs")
 #' 
@@ -29,10 +32,6 @@
 #'     tdevabs = "mdevabs",
 #'     sdevabs = "ldevabs",
 #'     num = "INC") 
-
-
-
-
 mas <- function(x, gdevabs, tdevabs, sdevabs, num){
   
   # convert to dataframe

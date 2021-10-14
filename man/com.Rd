@@ -27,6 +27,6 @@ Atelier parisien d'urbanisme, Grand Paris communal composition (2015-12-17):\cr
 Data on the Grand Paris Metropole communes, included in a sf object.
 }
 \examples{
-data(GrandParisMetropole)
-head(com)
+library(sf)
+com <- st_read(system.file("metroparis.gpkg", package = "MTA"), layer = "com", quiet = TRUE)
 }

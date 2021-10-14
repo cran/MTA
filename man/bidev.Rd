@@ -53,8 +53,9 @@ deviations relative.
 }
 \examples{
 # bidev synthesis on general and territorial deviation (income data)
-# load data
-data("GrandParisMetropole")
+# Load data
+library(sf)
+com <- st_read(system.file("metroparis.gpkg", package = "MTA"), layer = "com", quiet = TRUE)
 
 # Prerequisite  - Compute 2 deviations
 com$gdev <- gdev(x = com, var1 = "INC", var2 = "TH")

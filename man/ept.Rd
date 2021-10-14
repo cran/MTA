@@ -20,6 +20,5 @@ EPTs (Etablissements Publics Territoriaux) are groups of communes.\cr
 }
 \examples{
 library(sf)
-data(GrandParisMetropole)
-plot(st_geometry(ept))
+ept <- st_read(system.file("metroparis.gpkg", package = "MTA"), layer = "ept", quiet = TRUE)
 }
