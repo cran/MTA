@@ -1,23 +1,27 @@
 ## ----input, warning = FALSE, cache = FALSE------------------------------------
 # load packages
+library(sf)
 library(MTA)
 library(mapsf)
 library(ineq)
 
 # load dataset
-com <- st_read(system.file("metroparis.gpkg", package = "MTA"), layer = "com", quiet = TRUE)
-ept <- st_read(system.file("metroparis.gpkg", package = "MTA"), layer = "ept", quiet = TRUE)
+com <- st_read(system.file("metroparis.gpkg", package = "MTA"),
+               layer = "com", quiet = TRUE)
+ept <- st_read(system.file("metroparis.gpkg", package = "MTA"), 
+               layer = "ept", quiet = TRUE)
 
 # set row names to municipalities names
 row.names(com) <- com$LIBCOM
 
 ## ----plot_zonings, fig.width=7, fig.height=5, warning = FALSE, cache = FALSE, fig.align = 'center'----
 # label / colors management
-LIBEPT <- c("Paris", "Est Ensemble", "Grand-Paris Est", "Territoire des aeroports",   
-          "Plaine Commune", "Boucle Nord 92", "La Defense","Grand Paris Sud Ouest",   
-          "Sud Hauts-de-Seine", "Val de Bievres - Seine Amond - Grand Orly",
-          "Plaine Centrale - Haut Val-de-Marne - Plateau Briard",
-          "Association des Communes de l'Est Parisien")
+LIBEPT <- c("Paris", "Est Ensemble", "Grand-Paris Est", 
+            "Territoire des aeroports", "Plaine Commune", "Boucle Nord 92", 
+            "La Defense","Grand Paris Sud Ouest", "Sud Hauts-de-Seine", 
+            "Val de Bievres - Seine Amond - Grand Orly",
+            "Plaine Centrale - Haut Val-de-Marne - Plateau Briard",
+            "Association des Communes de l'Est Parisien")
 
 # colors
 cols <- c("#cfcfcf", # Grey(Paris)
@@ -82,11 +86,13 @@ com$ratio <- com$INC / com$TH
 
 # ratio map
 mf_map(x = com, var = "ratio", type = "choro",
-       breaks = c(min(com$ratio, na.rm = TRUE), 20000, 30000, 40000, 50000, 60000,
-                      max(com$ratio, na.rm = TRUE)),
+       breaks = c(min(com$ratio, na.rm = TRUE), 
+                  20000, 30000, 40000, 50000, 60000, 
+                  max(com$ratio, na.rm = TRUE)),
        pal = c("#FCDACA", "#F6A599", "#F07168", "#E92B28", "#C70003", "#7C000C"),
        border = "white", lwd = 0.2, leg_pos = "topleft", leg_val_rnd = 0,
-       leg_title = "Average amount of income tax\nreference per households\n(in euros)") 
+       leg_title = paste0("Average amount of income tax",
+                          "\nreference per households\n(in euros)")) 
 
 # EPT borders
 mf_map(ept, col = NA, border = "black", add = TRUE)
@@ -250,7 +256,8 @@ mf_map(x = com, var = "sdevrel", type = "choro",
        pal = devpal, border = "white", lwd = 0.2, 
        leg_pos = "topleft", leg_val_rnd = 0,
        leg_title = paste0("Deviation to the spatial context",
-                          "\n(100 = average of the contiguous territorial units - order 1)")) 
+                          "\n(100 = average of the contiguous",
+                          " territorial units - order 1)")) 
 
 # Plot EPT
 mf_map(ept, col = NA, border = "#1A1A19",lwd = 1, add = T)
@@ -278,10 +285,12 @@ df <- st_set_geometry(com, NULL)
 lm <- summary.lm(lm(sdevrel ~ gdevrel, df))
 
 # Equation 
-eq <- paste("Spatial Deviation =", round(lm$coefficients["gdevrel","Estimate"], digits = 3),
-            "* (Global Deviation) +", round(lm$coefficients["(Intercept)","Estimate"], 
-                                            digits = 3))
-rsq <-paste("R-Squared =", round(summary(lm(sdevrel ~ gdevrel, com ))$r.squared, digits = 2))
+eq <- paste("Spatial Deviation =", 
+            round(lm$coefficients["gdevrel","Estimate"], digits = 3),
+            "* (Global Deviation) +", 
+            round(lm$coefficients["(Intercept)","Estimate"], digits = 3))
+rsq <-paste("R-Squared =", 
+            round(summary(lm(sdevrel ~ gdevrel, com ))$r.squared, digits = 2))
 
 # Color management
 df <- merge(df, colEpt, by = "LIBEPT")
@@ -297,7 +306,7 @@ plot(df$gdevrel, df$sdevrel,
      asp = 1)
 abline((lm(df$sdevrel ~ df$gdevrel)), col = "red", lwd =1)
 
-# Specify linear regression formula and R-Squared of the spatial autocorrelation on the plot
+# Specify linear regression formula and R-Squared of the spatial autocorrelation
 text(110,60, pos = 4, cex = 0.7, labels = eq)
 text(110,55, pos = 4, cex = 0.7, labels = rsq)
 
@@ -452,12 +461,14 @@ df[1:10, c("gdevabsmil", "gdevabsPerc")]
 df <- st_set_geometry(com, NULL)
 row.names(df) <- df$LIBCOM
 
-# Territorial deviation - Top 10 of the potential contributors as regards to their total amount of income
+# Territorial deviation - Top 10 of the potential contributors
+# as regards to their total amount of income
 df$tdevabsPerc <- df$tdevabs / df$INC * 100
 df <- df[order(df$tdevabsPerc, decreasing = TRUE), ]
 df[1:10, c("tdevabsmil", "tdevabsPerc")]
 
-# Territorial deviation - Top 10 of the potential receivers as regards to their total amount of income
+# Territorial deviation - Top 10 of the potential receivers 
+# as regards to their total amount of income
 df <- df[order(df$tdevabsPerc, decreasing = FALSE), ]
 df[1:10, c("tdevabsmil", "tdevabsPerc")]
 
@@ -546,7 +557,9 @@ mf_map(x = com, var = "mst", type = "typo",
        pal = cols, val_order = unique(com$mst), leg_pos = "n")
 mf_map(ept, col = NA, border = "black", lwd = 1, add = TRUE)
 mf_legend(type = "typo", pos = "topleft", val = leg_val, pal = cols, 
-          title = "Situation on General (G)\nTerrorial (T) and\nSpatial (S) contexts",)
+          title = paste0("Situation on General (G)\n",
+                         "Terrorial (T) and \n",
+                         "Spatial (S) contexts"))
 mf_layout(title = "3-Deviations synthesis: Territorial units above index 125",
           credits = paste0("Sources : GEOFLA® 2015 v2.1, Apur, impots.gouv.fr",
                            "\nRonan Ysebaert, RIATE, 2021"), 
@@ -572,7 +585,9 @@ mf_map(x = com, var = "mst", type = "typo",
        pal = cols, val_order = unique(com$mst), leg_pos = "n")
 mf_map(ept, col = NA, border = "black", lwd = 1, add = TRUE)
 mf_legend(type = "typo", pos = "topleft", val = leg_val, pal = cols, 
-          title = "Situation on General (G)\nTerrorial (T) and\nSpatial (S) contexts",)
+          title = paste0("Situation on General (G)\n",
+                         "Terrorial (T) and\n",
+                         "Spatial (S) contexts"))
 mf_layout(title = "3-Deviations synthesis: Territorial units under index 80",
           credits = paste0("Sources : GEOFLA® 2015 v2.1, Apur, impots.gouv.fr",
                            "\nRonan Ysebaert, RIATE, 2021"), 
@@ -596,15 +611,20 @@ subset(com, mstP == 7, select = c(ratio, gdev, tdev, sdev, mstP), drop = T)
 
 ## ----synthesis80_class3-------------------------------------------------------
 # municipalities in lagging situation in the global and territorial contexts
-subset(com, mstP == 3, select = c(ratio, gdev, tdev, sdev, mstP), drop = T)
+subset(com, mstP == 3, 
+       select = c(ratio, gdev, tdev, sdev, mstP), drop = T)
 # municipalities in favorable situation in a spatial context or in a spatial and a territorial context 
-subset(com, mstP == 4 | mstP == 6, select = c(ratio, gdev, tdev, sdev, mstP), drop = T)
+subset(com, mstP == 4 | mstP == 6, 
+       select = c(ratio, gdev, tdev, sdev, mstP), drop = T)
 
 ## ----plot_mst, fig.width = 7, fig.height=6, fig.show='hold'-------------------
 opar <- par(mar = c(4, 6, 4, 4))
 # Synthesis barplot
-plot_mst(x = com, gdevrel = "gdev", tdevrel = "tdev", sdevrel = "sdev", lib.var = "LIBCOM", 
-         lib.val = c("Neuilly-sur-Seine", "Clichy-sous-Bois", "Suresnes", "Les Lilas"))
+plot_mst(x = com, 
+         gdevrel = "gdev", tdevrel = "tdev", sdevrel = "sdev", 
+         lib.var = "LIBCOM", 
+         lib.val = c("Neuilly-sur-Seine", "Clichy-sous-Bois", 
+                     "Suresnes", "Les Lilas"))
 par(opar)
 
 ## ----synthesisabs, fig.width=7, fig.height=5, warning = FALSE, cache = FALSE, eval = TRUE----
