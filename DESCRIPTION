@@ -1,6 +1,6 @@
 Package: MTA
 Title: Multiscalar Territorial Analysis
-Version: 0.4.1
+Version: 0.5.0
 Authors@R: c(person("Ronan", "Ysebaert", 
       email = "ronan.ysebaert@cnrs.fr", role = c("aut")),
       person("Nicolas", "Lambert", 
@@ -16,12 +16,12 @@ Imports: methods, stats, graphics, igraph, sf
 Suggests: knitr, rmarkdown, ineq, png, mapsf
 VignetteBuilder: knitr
 Encoding: UTF-8
-RoxygenNote: 7.2.0
+RoxygenNote: 7.2.3
 NeedsCompilation: no
-Packaged: 2022-06-03 11:28:23 UTC; tim
+Packaged: 2023-09-07 12:50:32 UTC; tim
 Author: Ronan Ysebaert [aut],
   Nicolas Lambert [aut],
   Timothée Giraud [aut, cre]
 Maintainer: Timothée Giraud <timothee.giraud@cnrs.fr>
 Repository: CRAN
-Date/Publication: 2022-06-03 16:00:02 UTC
+Date/Publication: 2023-09-07 13:10:05 UTC
